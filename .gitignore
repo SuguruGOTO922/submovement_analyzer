@@ -1,0 +1,52 @@
+# --- MATLAB Generated Files ---
+# Autosave files
+*.asv
+*.m~
+
+# Compiled MEX files (binary)
+*.mex*
+*.mexa64
+*.mexw64
+*.mexmaci64
+
+# MATLAB Project local settings (Don't commit user-specific settings)
+resources/project/
+.SimulinkProject/
+_SimulinkProject/
+
+# Packed app installers
+*.mlappinstall
+
+# Figure files (optional: keep if you want to version control output figures)
+*.fig
+
+# --- Data Files ---
+# Ignore Input CSV data (large datasets should not be in git)
+*.csv
+# Keep the example/template csv if you have one specifically named:
+!example_data.csv
+
+# Excel files
+*.xlsx
+*.xls
+
+# --- System Files ---
+# Mac
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+
+# --- Documentation / Reports ---
+# PDF/Word reports generated manually
+*.pdf
+*.docx
+
+# --- IDE / Editor Settings ---
+.vscode/
+*.settings
+
+# --- Sample data ---
+data/  
+data/samples 

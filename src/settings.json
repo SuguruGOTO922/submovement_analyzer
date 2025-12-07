@@ -1,0 +1,14 @@
+{
+  "Import": {
+    "TimeCol": 1,
+    "PosCol": 5,
+    "HasHeader": true,
+    "AxisMapX": 1,
+    "AxisMapY": 3,
+    "AxisMapZ": 2
+  },
+  "Analysis": {
+    "VelThresh": 50,
+    "MinDuration": 40
+  }
+}
