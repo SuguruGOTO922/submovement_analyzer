@@ -1,12 +1,13 @@
-classdef SubmovementAnalyzer < matlab.apps.AppBase
+classdef SubmovementAnalyzer < handle
 
     % ---------------------------------------------------------------------
     % Properties
     % ---------------------------------------------------------------------
     properties (Access = public)
         UIFigure      matlab.ui.Figure
-        GridLayout    matlab.ui.container.GridLayout
+        MainGrid      matlab.ui.container.GridLayout
         LeftPanel     matlab.ui.container.Panel
+        LeftGrid      matlab.ui.container.GridLayout
         
         % Import Settings
         SettingsLabel    matlab.ui.control.Label
@@ -16,7 +17,7 @@ classdef SubmovementAnalyzer < matlab.apps.AppBase
         PosColSpinner    matlab.ui.control.Spinner
         HeaderCheckBox   matlab.ui.control.CheckBox
         
-        % --- New: Axis Mapping UI ---
+        % Axis Mapping UI
         AxisMapLabel     matlab.ui.control.Label
         AxisXLabel       matlab.ui.control.Label
         AxisXSpinner     matlab.ui.control.Spinner
@@ -24,7 +25,6 @@ classdef SubmovementAnalyzer < matlab.apps.AppBase
         AxisYSpinner     matlab.ui.control.Spinner
         AxisZLabel       matlab.ui.control.Label
         AxisZSpinner     matlab.ui.control.Spinner
-        % ----------------------------
         
         % Analysis Params
         ParamsLabel      matlab.ui.control.Label
@@ -55,42 +55,62 @@ classdef SubmovementAnalyzer < matlab.apps.AppBase
         BatchData struct
         IsAnalyzed logical = false
     end
+    
+    methods (Static) 
+        function app = launch() 
+            persistent instance 
+            
+            if isempty(instance) || ~isvalid(instance) 
+                instance = SubmovementAnalyzer(); 
+            else 
+                figure(instance.UIFigure) 
+            end 
+
+            if nargout > 0 
+                app = instance; 
+            end 
+        end 
+    end 
 
     % ---------------------------------------------------------------------
     % Public Methods (Constructor)
     % ---------------------------------------------------------------------
-    methods (Access = public)
+    methods (Access = private)
         function app = SubmovementAnalyzer
-            % SINGLETON CHECK:
-            % Before creating components, check if an instance already exists.
+            % Constructor: Handles Singleton logic and initialization.
+            
+            % 1. Singleton Check
             appTag = 'SubmovementAnalyzer_Singleton_Tag';
             existingFigs = findall(groot, 'Type', 'figure', 'Tag', appTag);
             
             if ~isempty(existingFigs)
-                % Instance exists: Bring to front
+                % If instance exists, bring it to front
                 figure(existingFigs(1));
-                fprintf('SubmovementAnalyzer is already running.\n');
                 
-                % Return early WITHOUT creating new components.
-                % The 'app' object returned here will be valid but empty (no UI).
-                % This prevents a duplicate window from appearing.
+                % Delete this new instance immediately to prevent duplicate windows
+                delete(app);
+                
+                % Return early (caller will receive a deleted handle)
                 return;
             end
             
-            % 1. Create UI Components
+            % 2. Create UI Components
             createComponents(app);
             
-            % Tag the figure for future singleton checks
+            % 3. Tag the figure for future singleton checks
             app.UIFigure.Tag = appTag;
-
-            % 2. Register App
-            registerApp(app, app.UIFigure);
             
-            % 3. Load Settings (Startup Logic)
-            startup(app);
-
-            if nargout == 0; clear app; end
+            % 4. Load Settings (Startup Logic)
+            startup(app.UIFigure);
         end
+
+        function delete(app) 
+            if ~isempty(app.UIFigure) && isvalid(app.UIFigure) 
+                delete(app.UIFigure) 
+            end 
+            % For debugging 
+            disp('App has been deleted.')
+        end 
     end
 
     % ---------------------------------------------------------------------
@@ -109,7 +129,7 @@ classdef SubmovementAnalyzer < matlab.apps.AppBase
             app.PosColSpinner.Value = s.Import.PosCol;
             app.HeaderCheckBox.Value = s.Import.HasHeader;
             
-            % Axis Mapping (Apply saved settings or defaults)
+            % Axis Mapping
             if isfield(s.Import, 'AxisMapX'); app.AxisXSpinner.Value = s.Import.AxisMapX; end
             if isfield(s.Import, 'AxisMapY'); app.AxisYSpinner.Value = s.Import.AxisMapY; end
             if isfield(s.Import, 'AxisMapZ'); app.AxisZSpinner.Value = s.Import.AxisMapZ; end
@@ -117,31 +137,6 @@ classdef SubmovementAnalyzer < matlab.apps.AppBase
             % Analysis Params
             app.VelThreshSpinner.Value = s.Analysis.VelThresh;
             app.DurSpinner.Value = s.Analysis.MinDuration;
-        end
-        
-        function onClose(app, ~, ~)
-            try
-                % Gather Settings
-                s.Import.TimeCol = app.TimeColSpinner.Value;
-                s.Import.PosCol = app.PosColSpinner.Value;
-                s.Import.HasHeader = app.HeaderCheckBox.Value;
-                
-                % Gather Axis Mapping
-                s.Import.AxisMapX = app.AxisXSpinner.Value;
-                s.Import.AxisMapY = app.AxisYSpinner.Value;
-                s.Import.AxisMapZ = app.AxisZSpinner.Value;
-                
-                % Gather Analysis Params
-                s.Analysis.VelThresh = app.VelThreshSpinner.Value;
-                s.Analysis.MinDuration = app.DurSpinner.Value;
-                
-                MotionAnalysis.FileIO.Settings.save(s);
-            catch ME
-                warning(ME.identifier, 'Failed to save settings: %s', ME.message);
-            end
-            
-            delete(app.UIFigure);
-            delete(app);
         end
 
         % --- Callback Methods ---
@@ -184,8 +179,7 @@ classdef SubmovementAnalyzer < matlab.apps.AppBase
                 d = uiprogressdlg(app.UIFigure, 'Title', 'Analyzing...', 'Message', 'Starting...');
                 progressFcn = @(ratio, msg) set(d, 'Value', ratio, 'Message', msg);
                 
-                app.BatchData = MotionAnalysis.processBatch(app.BatchData, params, ...
-                    "progressCallback", progressFcn);
+                app.BatchData = MotionAnalysis.processBatch(app.BatchData, params, progressFcn);
                 
                 close(d);
                 figure(app.UIFigure); 
@@ -214,7 +208,6 @@ classdef SubmovementAnalyzer < matlab.apps.AppBase
         end
         
         function AxisSpinnerChanged(app, ~, ~)
-            % Redraw plot when axis mapping changes
             if ~app.IsAnalyzed; return; end
             idx = app.FileDropDown.Value;
             updateView(app, idx);
@@ -254,80 +247,36 @@ classdef SubmovementAnalyzer < matlab.apps.AppBase
                                    " | Type: " + res.SubType;
         end
 
-        % --- UI Creation ---
+        % --- UI Creation (Modularized) ---
 
         function createComponents(app)
-            % Main Window (Increased height for new controls)
-            app.UIFigure = uifigure('Visible', 'off', 'Position', [100 100 1050 780], 'Name', 'Submovement Analyzer v3.5');
-            app.UIFigure.CloseRequestFcn = @(src, event) app.onClose(src, event);
+            % 1. Main Window
+            app.UIFigure = uifigure('Visible', 'off', 'Position', [100 100 1050 780], 'Name', 'Submovement Analyzer v4.3');
+            app.UIFigure.CloseRequestFcn = @(src, event) delete(app);
 
-            app.GridLayout = uigridlayout(app.UIFigure, 'ColumnWidth', {260, '1x'}, 'RowHeight', {'1x'});
+            app.MainGrid = uigridlayout(app.UIFigure, 'ColumnWidth', {260, '1x'}, 'RowHeight', {'1x'});
 
-            app.LeftPanel = uipanel(app.GridLayout);
+            % 2. Left Panel
+            app.LeftPanel = uipanel(app.MainGrid);
             app.LeftPanel.Layout.Row = 1; app.LeftPanel.Layout.Column = 1;
             
-            yPos = 740;
-            
-            % 1. Import Settings
-            app.SettingsLabel = uilabel(app.LeftPanel, 'Text', '1. Import Settings', 'Position', [10 yPos 200 20], 'FontWeight', 'bold');
-            yPos = yPos - 30;
-            app.TimeColLabel = uilabel(app.LeftPanel, 'Text', 'Time Col:', 'Position', [10 yPos 80 20]);
-            app.TimeColSpinner = uispinner(app.LeftPanel, 'Position', [90 yPos 50 20], 'Limits', [1 100], 'Value', 1);
-            app.PosColLabel = uilabel(app.LeftPanel, 'Text', 'Pos Start:', 'Position', [150 yPos 60 20]);
-            app.PosColSpinner = uispinner(app.LeftPanel, 'Position', [210 yPos 35 20], 'Limits', [1 100], 'Value', 2);
-            yPos = yPos - 25;
-            app.HeaderCheckBox = uicheckbox(app.LeftPanel, 'Text', 'First Row is Header', 'Position', [10 yPos 150 20], 'Value', false);
-            
-            % --- New: Axis Mapping UI ---
-            yPos = yPos - 30;
-            app.AxisMapLabel = uilabel(app.LeftPanel, 'Text', '3D Axis Map (Pos Col #):', 'Position', [10 yPos 200 20], 'FontSize', 11);
-            yPos = yPos - 30;
-            
-            % X Mapping
-            app.AxisXLabel = uilabel(app.LeftPanel, 'Text', 'Plot X:', 'Position', [10 yPos 50 20]);
-            app.AxisXSpinner = uispinner(app.LeftPanel, 'Position', [60 yPos 40 20], 'Limits', [1 3], 'Value', 1, 'ValueChangedFcn', @app.AxisSpinnerChanged);
-            
-            % Y Mapping
-            app.AxisYLabel = uilabel(app.LeftPanel, 'Text', 'Y:', 'Position', [110 yPos 20 20]);
-            app.AxisYSpinner = uispinner(app.LeftPanel, 'Position', [130 yPos 40 20], 'Limits', [1 3], 'Value', 2, 'ValueChangedFcn', @app.AxisSpinnerChanged);
-            
-            % Z Mapping
-            app.AxisZLabel = uilabel(app.LeftPanel, 'Text', 'Z:', 'Position', [180 yPos 20 20]);
-            app.AxisZSpinner = uispinner(app.LeftPanel, 'Position', [200 yPos 40 20], 'Limits', [1 3], 'Value', 3, 'ValueChangedFcn', @app.AxisSpinnerChanged);
-            
-            % 2. Analysis Params
-            yPos = yPos - 40;
-            app.ParamsLabel = uilabel(app.LeftPanel, 'Text', '2. Analysis Params', 'Position', [10 yPos 200 20], 'FontWeight', 'bold');
-            yPos = yPos - 30;
-            app.VelThreshLabel = uilabel(app.LeftPanel, 'Text', 'Vel Thresh (mm/s):', 'Position', [10 yPos 120 20]);
-            app.VelThreshSpinner = uispinner(app.LeftPanel, 'Position', [140 yPos 60 20], 'Limits', [1 1000], 'Value', 10);
-            yPos = yPos - 25;
-            app.DurLabel = uilabel(app.LeftPanel, 'Text', 'Min Dur (ms):', 'Position', [10 yPos 120 20]);
-            app.DurSpinner = uispinner(app.LeftPanel, 'Position', [140 yPos 60 20], 'Limits', [1 1000], 'Value', 40);
+            app.LeftGrid = uigridlayout(app.LeftPanel, 'ColumnWidth', {'1x'}, 'RowHeight', ...
+                {'fit','fit','fit','fit', 'fit','fit','fit','fit', 'fit','fit','fit','fit', '1x'}); 
+            app.LeftGrid.RowSpacing = 10;
+            app.LeftGrid.Padding = [10 10 10 10];
 
-            % Action Buttons
-            yPos = yPos - 50; 
-            app.LoadButton = uibutton(app.LeftPanel, 'push', 'Text', 'Load CSV Files', 'Position', [20 yPos 220 30], 'ButtonPushedFcn', @app.LoadButtonPushed);
-            yPos = yPos - 40;
-            app.AnalyzeButton = uibutton(app.LeftPanel, 'push', 'Text', 'Analyze All', 'Position', [20 yPos 220 30], 'Enable', 'off', 'ButtonPushedFcn', @app.AnalyzeButtonPushed);
-            
-            yPos = yPos - 50;
-            app.FileLabel = uilabel(app.LeftPanel, 'Text', 'Select File to View:', 'Position', [20 yPos 220 20]);
-            yPos = yPos - 25;
-            app.FileDropDown = uidropdown(app.LeftPanel, 'Position', [20 yPos 220 25], 'Enable', 'off', 'ValueChangedFcn', @app.FileDropDownValueChanged);
-            
-            yPos = yPos - 50;
-            app.ExportButton = uibutton(app.LeftPanel, 'push', 'Text', 'Export Summary', 'Position', [20 yPos 220 30], 'Enable', 'off', 'ButtonPushedFcn', @app.ExportButtonPushed);
-            
-            % Status
-            app.StatusLabel = uilabel(app.LeftPanel, 'Text', 'Ready.', 'Position', [20 20 220 50], 'WordWrap', 'on', 'VerticalAlignment', 'top');
+            % 3. Build UI Sections
+            buildImportSection(app);
+            buildAxisSection(app);
+            buildParamsSection(app);
+            buildActionSection(app);
 
-            % Visualization
-            app.TabGroup = uitabgroup(app.GridLayout);
+            % 4. Right Panel
+            app.TabGroup = uitabgroup(app.MainGrid);
             app.TabGroup.Layout.Row = 1; app.TabGroup.Layout.Column = 2;
 
             app.Tab3D = uitab(app.TabGroup, 'Title', '3D Trajectory');
-            app.Ax3D = uiaxes(app.Tab3D, 'Position', [10 10 700 700]);
+            app.Ax3D = uiaxes(app.Tab3D, 'Position', [10 10 700 700]); 
 
             app.TabKinematics = uitab(app.TabGroup, 'Title', 'Kinematics');
             kg = uigridlayout(app.TabKinematics, [3, 1]);
@@ -336,6 +285,73 @@ classdef SubmovementAnalyzer < matlab.apps.AppBase
             app.AxJerk = uiaxes(kg); app.AxJerk.Layout.Row = 3;
 
             app.UIFigure.Visible = 'on';
+        end
+        
+        function buildImportSection(app)
+            panel = uipanel(app.LeftGrid, 'Title', '1. Import Settings', 'FontWeight', 'bold');
+            panel.Layout.Row = 1;
+            g = uigridlayout(panel, 'ColumnWidth', {'1x', '1x'}, 'RowHeight', {'fit', 'fit', 'fit'});
+            
+            app.TimeColLabel = uilabel(g, 'Text', 'Time Column:');
+            app.TimeColSpinner = uispinner(g, 'Limits', [1 100], 'Value', 1);
+            
+            app.PosColLabel = uilabel(g, 'Text', 'Pos Start Col:');
+            app.PosColSpinner = uispinner(g, 'Limits', [1 100], 'Value', 2);
+            
+            app.HeaderCheckBox = uicheckbox(g, 'Text', 'Header Row');
+            app.HeaderCheckBox.Layout.Column = [1 2]; 
+        end
+        
+        function buildAxisSection(app)
+            panel = uipanel(app.LeftGrid, 'Title', '3D Axis Mapping', 'FontWeight', 'bold');
+            panel.Layout.Row = 2;
+            g = uigridlayout(panel, 'ColumnWidth', {'fit', '1x'}, 'RowHeight', {'fit', 'fit', 'fit'});
+            
+            app.AxisXLabel = uilabel(g, 'Text', 'Plot X (Col):');
+            app.AxisXSpinner = uispinner(g, 'Limits', [1 3], 'Value', 1, 'ValueChangedFcn', @app.AxisSpinnerChanged);
+            
+            app.AxisYLabel = uilabel(g, 'Text', 'Plot Y (Col):');
+            app.AxisYSpinner = uispinner(g, 'Limits', [1 3], 'Value', 2, 'ValueChangedFcn', @app.AxisSpinnerChanged);
+            
+            app.AxisZLabel = uilabel(g, 'Text', 'Plot Z (Col):');
+            app.AxisZSpinner = uispinner(g, 'Limits', [1 3], 'Value', 3, 'ValueChangedFcn', @app.AxisSpinnerChanged);
+        end
+        
+        function buildParamsSection(app)
+            panel = uipanel(app.LeftGrid, 'Title', '2. Analysis Params', 'FontWeight', 'bold');
+            panel.Layout.Row = 3;
+            g = uigridlayout(panel, 'ColumnWidth', {'1x', '1x'}, 'RowHeight', {'fit', 'fit'});
+            
+            app.VelThreshLabel = uilabel(g, 'Text', 'Vel Thresh:');
+            app.VelThreshSpinner = uispinner(g, 'Limits', [1 1000], 'Value', 10);
+            
+            app.DurLabel = uilabel(g, 'Text', 'Min Dur (ms):');
+            app.DurSpinner = uispinner(g, 'Limits', [1 1000], 'Value', 40);
+        end
+        
+        function buildActionSection(app)
+            app.LoadButton = uibutton(app.LeftGrid, 'push', 'Text', 'Load CSV Files', ...
+                'ButtonPushedFcn', @app.LoadButtonPushed);
+            app.LoadButton.Layout.Row = 4;
+            
+            app.AnalyzeButton = uibutton(app.LeftGrid, 'push', 'Text', 'Analyze All', ...
+                'Enable', 'off', 'ButtonPushedFcn', @app.AnalyzeButtonPushed);
+            app.AnalyzeButton.Layout.Row = 5;
+            
+            app.FileLabel = uilabel(app.LeftGrid, 'Text', 'Select File:');
+            app.FileLabel.Layout.Row = 6;
+            
+            app.FileDropDown = uidropdown(app.LeftGrid, 'Enable', 'off', ...
+                'ValueChangedFcn', @app.FileDropDownValueChanged);
+            app.FileDropDown.Layout.Row = 7;
+            
+            app.ExportButton = uibutton(app.LeftGrid, 'push', 'Text', 'Export Summary', ...
+                'Enable', 'off', 'ButtonPushedFcn', @app.ExportButtonPushed);
+            app.ExportButton.Layout.Row = 8;
+            
+            app.StatusLabel = uilabel(app.LeftGrid, 'Text', 'Ready.', 'WordWrap', 'on', ...
+                'VerticalAlignment', 'top');
+            app.StatusLabel.Layout.Row = 9;
         end
     end
 end
