@@ -1,4 +1,4 @@
-function batchData = processBatch(batchData, params, opts) 
+function batchData = processBatch(batchData, params, progressCallback) 
 % PROCESSBATCH Runs the analysis pipeline on all loaded files.
 %
 % Inputs:
@@ -12,25 +12,36 @@ function batchData = processBatch(batchData, params, opts)
 arguments 
     batchData struct 
     params struct
-    opts.progressCallback function_handle
+    progressCallback function_handle = []
 end 
 
 nFiles = length(batchData);
 
 for i = 1:nFiles
+    % --- Determine Sampling Rate ---
+    if isfield(params, 'FsAuto') && ~params.FsAuto && isfield(params, 'FsValue')
+        % Manual Override
+        currentFs = params.FsValue;
+    else
+        % Auto (Default)
+        currentFs = batchData(i).Fs;
+    end
+
     % Notify progress if callback is provided
-    if ~isempty(opts.progressCallback)
+    if ~isempty(progressCallback)
         msg = sprintf('Processing %d of %d: %s', i, nFiles, batchData(i).FileName);
-        opts.progressCallback(i / nFiles, msg);
+        progressCallback(i / nFiles, msg);
     end
     
     % Run Pipeline
     batchData(i).Results = MotionAnalysis.runPipeline(...
         batchData(i).RawData(:,1), ...
         batchData(i).RawData(:,2:4), ...
-        batchData(i).Fs, ...
+        currentFs, ...
         "minDuration", params.MinDuration, ...
-        "velThresh",   params.VelThresh);
+        "velThresh",   params.VelThresh, ...
+        "cutoffFreq",  params.CutoffFreq, ...
+        "filterOrder", params.FilterOrder);
 end
 
 end

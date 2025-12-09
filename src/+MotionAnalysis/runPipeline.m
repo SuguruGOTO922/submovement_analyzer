@@ -13,12 +13,15 @@ arguments
     fs (1,1) double 
     opts.velThresh (1,1) double = 10; 
     opts.minDuration (1,1) double = 0.040; 
+    opts.filterOrder (1,1) double {mustBeInteger} = 2
+    opts.cutoffFreq (1,1) double {mustBeInteger} = 10 
 end
 
 import MotionAnalysis.Algorithms.*
 
-% 1. Smoothing
-posSmooth = smoothData(posRaw, fs);
+% 1. Smoothing and Centering 
+posCentered = posRaw - posRaw(1,:); 
+posSmooth = smoothData(posCentered, fs, opts.cutoffFreq, opts.filterOrder);
 
 % 2. Tangential Velocity
 vel3D = centralDiff(posSmooth, fs);

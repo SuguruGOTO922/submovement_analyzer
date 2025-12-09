@@ -2,13 +2,17 @@
   "Import": {
     "TimeCol": 1,
     "PosCol": 5,
-    "HasHeader": true,
-    "AxisMapX": 1,
-    "AxisMapY": 3,
-    "AxisMapZ": 2
+    "HasHeader": true
   },
   "Analysis": {
-    "VelThresh": 50,
-    "MinDuration": 40
+    "AxisMapX": 1,
+    "AxisMapY": 3,
+    "AxisMapZ": 2,
+    "VelThresh": 10,
+    "MinDuration": 40,
+    "FilterOrder": 2,
+    "CutoffFreq": 10,
+    "FsAuto": false,
+    "FsValue": 150
   }
 }
