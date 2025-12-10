@@ -1,4 +1,4 @@
-function [subStartIdx, subType, pnaIdx] = analyzeSubmovements(projVel, projAcc, projJerk, onsetIdx, offsetIdx, fs, minDurationSubmov)
+function [subStartIdx, subType, pnaIdx] = analyzeSubmovements(projVel, projAcc, projJerk, onsetIdx, offsetIdx, fs, minDuration)
 % ANALYZESUBMOVEMENTS Classifies submovements.
 
 arguments 
@@ -8,10 +8,10 @@ arguments
     onsetIdx double {mustBeInteger}
     offsetIdx double {mustBeInteger}
     fs double 
-    minDurationSubmov double 
+    minDuration double 
 end 
 
-stableSamples = round(minDurationSubmov * fs);
+stableSamples = round(minDuration * fs);
 
 % 1. Find PNA
 if offsetIdx > length(projAcc); offsetIdx = length(projAcc); end
