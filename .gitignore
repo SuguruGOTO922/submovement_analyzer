@@ -10,7 +10,6 @@
 *.mexmaci64
 
 # MATLAB Project local settings (Don't commit user-specific settings)
-resources/project/
 .SimulinkProject/
 _SimulinkProject/
 
@@ -23,8 +22,8 @@ _SimulinkProject/
 # --- Data Files ---
 # Ignore Input CSV data (large datasets should not be in git)
 *.csv
-# Keep the example/template csv if you have one specifically named:
-!example_data.csv
+data/  
+data/samples 
 
 # Excel files
 *.xlsx
@@ -46,7 +45,3 @@ ehthumbs.db
 # --- IDE / Editor Settings ---
 .vscode/
 *.settings
-
-# --- Sample data ---
-data/  
-data/samples 
