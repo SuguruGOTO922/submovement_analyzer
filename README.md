@@ -78,4 +78,4 @@ ProjectRoot/
     Roberts, J. W., Burkitt, J. J., & Elliott, D. (2024). The type 1 submovement conundrum: an investigation into the function of velocity zero-crossings within two-component aiming movements. Experimental Brain Research, 242, 921–935.
 
 ## ライセンス
-[ライセンス情報をここに記載]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
