@@ -52,16 +52,15 @@ GUIは以下の4つのステップ（タブ）に分かれています。
 - __Load CSV Files__: 解析対象のファイルを選択して読み込み
 
 ### 2. Analyze (解析の実行) 
-- Filter Settings: フィルタの次数 (Order) とカットオフ周波数 (Cutoff) を指定
+- __Filter Settings__: フィルタの次数 (Order) とカットオフ周波数 (Cutoff) を指定
 - __Auto FS__: チェックを入れるとデータからサンプリングレートを自動算出。外すと手動入力 (Manual Fs) が有効化
-- Detection Params: 
+- __Detection Params__: 
     - __Vel Thresh__: 運動の開始・終了判定に使用する速度閾値 (mm/s) 
     - __Min Dur__: 状態が安定しているとみなすための最小持続時間 (ms)
 - __Run Analysis__: 全ファイルの解析を実行
 
 ### 3. Visualization (結果の確認)
-- __Axis Mapping__: 
-    - CSVデータの列 (Col 1, 2, 3) を、プロット上の X, Y, Z 軸にどう割り当てるかを設定
+- __Axis Mapping__: CSVデータの列 (Col 1, 2, 3) を、プロット上の X, Y, Z 軸にどう割り当てるかを設定
 - __Display Options__:
     - __Show Grid__: グリッドの表示/非表示
     - __Show Trajectory__: 運動軌道の表示/非表示
@@ -106,7 +105,7 @@ ProjectRoot/
 
 ## 参考文献 
 本ソフトウェアのアルゴリズムは以下の論文に基づいています。
-    Roberts, J. W., Burkitt, J. J., & Elliott, D. (2024). The type 1 submovement conundrum: an investigation into the function of velocity zero-crossings within two-component aiming movements. Experimental Brain Research, 242, 921–935.
+> Roberts, J. W., Burkitt, J. J., & Elliott, D. (2024). The type 1 submovement conundrum: an investigation into the function of velocity zero-crossings within two-component aiming movements. Experimental Brain Research, 242, 921–935.
 
 ## ライセンス
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
