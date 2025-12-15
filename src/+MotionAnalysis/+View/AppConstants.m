@@ -1,4 +1,4 @@
-classdef Resources
+classdef AppConstants
     % Resources: Central repository for string constants and configuration.
     
     properties (Constant)
@@ -33,7 +33,7 @@ classdef Resources
 
         % UI Text: Filter & Fs Section
         Label_FilterSettings = 'Filter Settings';
-        Label_FilterOrder    = 'Order:';
+        Label_FilterOrder    = 'Filter Order:';
         Label_Cutoff         = 'Cutoff (Hz):';
         Label_FsAuto         = 'Auto Fs:';
         Label_FsVal          = 'Manual Fs (Hz):';
@@ -67,17 +67,17 @@ classdef Resources
         Check_SubMaxVel      = 'Sub Max Velocity';
         
         % Messages
-        Text_Ready           = 'Ready.';
-        Msg_SelectCSV        = 'Select CSV Files';
-        Msg_LoadedCount      = 'Loaded %d files.'; 
+        Text_Ready             = 'Ready.';
+        Msg_SelectCSV          = 'Select CSV Files';
+        Msg_LoadedCount        = 'Loaded %d files.'; 
         Msg_AnalyzeProgressTitle = 'Analyzing...';
-        Msg_AnalyzeStart     = 'Starting...';
-        Msg_AnalyzeComplete  = 'Analysis Complete.';
-        Msg_AnalyzeErrorTitle = 'Analysis Error';
-        Msg_SaveBatchTitle   = 'Save Batch Results';
-        Msg_ExportSuccess    = 'Export successful.';
+        Msg_AnalyzeStart       = 'Starting...';
+        Msg_AnalyzeComplete    = 'Analysis Complete.';
+        Msg_AnalyzeErrorTitle  = 'Analysis Error';
+        Msg_SaveBatchTitle     = 'Save Batch Results';
+        Msg_ExportSuccess      = 'Export successful.';
         Msg_ExportSuccessTitle = 'Success';
-        Msg_ExportErrorTitle = 'Export Failed';
+        Msg_ExportErrorTitle   = 'Export Failed';
         
         % Visualization Titles
         Tab_3DTrajectory     = '3D Trajectory';

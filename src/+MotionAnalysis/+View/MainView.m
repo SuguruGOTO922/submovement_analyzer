@@ -105,8 +105,9 @@ classdef MainView < handle
     
     methods (Access = private)
         function createComponents(obj)
-            import MotionAnalysis.UI.Resources
-            obj.UIFigure = uifigure('Visible', 'off', 'Position', [100 100 1100 780], 'Name', Resources.AppName);
+            import MotionAnalysis.View.AppConstants
+
+            obj.UIFigure = uifigure('Visible', 'off', 'Position', [100 100 1100 780], 'Name', AppConstants.AppName);
             obj.MainGrid = uigridlayout(obj.UIFigure, 'ColumnWidth', {320, '1x'}, 'RowHeight', {'1x'});
 
             obj.LeftPanel = uipanel(obj.MainGrid);
@@ -118,25 +119,25 @@ classdef MainView < handle
             obj.LeftTabGroup = uitabgroup(obj.LeftMainGrid);
             obj.LeftTabGroup.Layout.Row = 1;
 
-            obj.TabImport  = uitab(obj.LeftTabGroup, 'Title', Resources.Title_TabImport);
-            obj.TabAnalyze = uitab(obj.LeftTabGroup, 'Title', Resources.Title_TabAnalyze);
-            obj.TabVis     = uitab(obj.LeftTabGroup, 'Title', Resources.Title_TabVis);
-            obj.TabExport  = uitab(obj.LeftTabGroup, 'Title', Resources.Title_TabExport);
+            obj.TabImport  = uitab(obj.LeftTabGroup, 'Title', AppConstants.Title_TabImport);
+            obj.TabAnalyze = uitab(obj.LeftTabGroup, 'Title', AppConstants.Title_TabAnalyze);
+            obj.TabVis     = uitab(obj.LeftTabGroup, 'Title', AppConstants.Title_TabVis);
+            obj.TabExport  = uitab(obj.LeftTabGroup, 'Title', AppConstants.Title_TabExport);
 
             buildImportTab(obj);
             buildAnalyzeTab(obj);
             buildVisTab(obj);
             buildExportTab(obj);
 
-            obj.StatusLabel = uilabel(obj.LeftMainGrid, 'Text', Resources.Text_Ready, ...
+            obj.StatusLabel = uilabel(obj.LeftMainGrid, 'Text', AppConstants.Text_Ready, ...
                 'WordWrap', 'on', 'VerticalAlignment', 'top', 'FontWeight', 'bold');
             obj.StatusLabel.Layout.Row = 2;
 
             obj.RightTabGroup = uitabgroup(obj.MainGrid);
             obj.RightTabGroup.Layout.Row = 1; obj.RightTabGroup.Layout.Column = 2;
-            obj.Tab3D = uitab(obj.RightTabGroup, 'Title', Resources.Tab_3DTrajectory);
+            obj.Tab3D = uitab(obj.RightTabGroup, 'Title', AppConstants.Tab_3DTrajectory);
             obj.Ax3D = uiaxes(obj.Tab3D, 'Position', [10 10 700 700]); 
-            obj.TabKinematics = uitab(obj.RightTabGroup, 'Title', Resources.Tab_Kinematics);
+            obj.TabKinematics = uitab(obj.RightTabGroup, 'Title', AppConstants.Tab_Kinematics);
             kg = uigridlayout(obj.TabKinematics, [3, 1]);
             obj.AxVel = uiaxes(kg); obj.AxVel.Layout.Row = 1;
             obj.AxAcc = uiaxes(kg); obj.AxAcc.Layout.Row = 2;
@@ -145,49 +146,49 @@ classdef MainView < handle
         end
         
         function buildImportTab(obj)
-            import MotionAnalysis.UI.Resources
+            import MotionAnalysis.View.AppConstants
             obj.GridImport = uigridlayout(obj.TabImport, 'ColumnWidth', {'1x'}, 'RowHeight', {'fit', 'fit', '1x'}); 
             obj.GridImport.Padding = [10 10 10 10]; obj.GridImport.RowSpacing = 15;
             
-            p1 = uipanel(obj.GridImport, 'Title', Resources.Label_ImportSettings); p1.Layout.Row = 1;
+            p1 = uipanel(obj.GridImport, 'Title', AppConstants.Label_ImportSettings); p1.Layout.Row = 1;
             g1 = uigridlayout(p1, 'ColumnWidth', {'1x', '1x'}, 'RowHeight', {'fit', 'fit', 'fit', 'fit'});
             
-            obj.TimeColLabel = uilabel(g1, 'Text', Resources.Label_TimeCol); obj.TimeColSpinner = uispinner(g1, 'Limits', [1 100], 'Value', 1);
-            obj.PosColLabel = uilabel(g1, 'Text', Resources.Label_PosCol); obj.PosColSpinner = uispinner(g1, 'Limits', [1 100], 'Value', 2);
-            obj.HeaderCheckBox = uicheckbox(g1, 'Text', Resources.Label_HeaderRow); obj.HeaderCheckBox.Layout.Column = [1 2]; 
-            obj.UnitLabel = uilabel(g1, 'Text', Resources.Label_Unit); obj.UnitDropDown = uidropdown(g1, 'Items', Resources.Items_Unit, 'Value', 'mm');
+            obj.TimeColLabel = uilabel(g1, 'Text', AppConstants.Label_TimeCol); obj.TimeColSpinner = uispinner(g1, 'Limits', [1 100], 'Value', 1);
+            obj.PosColLabel = uilabel(g1, 'Text', AppConstants.Label_PosCol); obj.PosColSpinner = uispinner(g1, 'Limits', [1 100], 'Value', 2);
+            obj.HeaderCheckBox = uicheckbox(g1, 'Text', AppConstants.Label_HeaderRow); obj.HeaderCheckBox.Layout.Column = [1 2]; 
+            obj.UnitLabel = uilabel(g1, 'Text', AppConstants.Label_Unit); obj.UnitDropDown = uidropdown(g1, 'Items', AppConstants.Items_Unit, 'Value', 'mm');
 
-            obj.LoadButton = uibutton(obj.GridImport, 'push', 'Text', Resources.Text_LoadButton, 'FontWeight', 'bold'); obj.LoadButton.Layout.Row = 2;
+            obj.LoadButton = uibutton(obj.GridImport, 'push', 'Text', AppConstants.Text_LoadButton, 'FontWeight', 'bold'); obj.LoadButton.Layout.Row = 2;
         end
         
         function buildAnalyzeTab(obj)
-            import MotionAnalysis.UI.Resources
-            obj.GridAnalyze = uigridlayout(obj.TabAnalyze, 'ColumnWidth', {'1x'}, 'RowHeight', {'fit', 'fit', '1x'});
+            import MotionAnalysis.View.AppConstants
+            obj.GridAnalyze = uigridlayout(obj.TabAnalyze, 'ColumnWidth', {'1x'}, 'RowHeight', {'fit', 'fit', 'fit', '1x'});
             obj.GridAnalyze.Padding = [10 10 10 10]; obj.GridAnalyze.RowSpacing = 10;
 
-            pF = uipanel(obj.GridAnalyze, 'Title', Resources.Label_FilterSettings); pF.Layout.Row = 1;
+            pF = uipanel(obj.GridAnalyze, 'Title', AppConstants.Label_FilterSettings); pF.Layout.Row = 1;
             gF = uigridlayout(pF, 'ColumnWidth', {'fit', '1x'}, 'RowHeight', {'fit', 'fit', 'fit', 'fit'});
-            obj.OrderLabel = uilabel(gF, 'Text', Resources.Label_FilterOrder); obj.OrderSpinner = uispinner(gF, 'Limits', [1 10], 'Value', 2);
-            obj.CutoffLabel = uilabel(gF, 'Text', Resources.Label_Cutoff); obj.CutoffSpinner = uispinner(gF, 'Limits', [0.1 500], 'Value', 10);
-            obj.FsLabel = uilabel(gF, 'Text', Resources.Label_FsAuto); obj.FsAutoCheckBox = uicheckbox(gF, 'Text', '', 'Value', true);
-            obj.FsValLabel = uilabel(gF, 'Text', Resources.Label_FsVal); obj.FsSpinner = uispinner(gF, 'Limits', [1 10000], 'Value', 1000, 'Enable', 'off');
+            obj.OrderLabel = uilabel(gF, 'Text', AppConstants.Label_FilterOrder); obj.OrderSpinner = uispinner(gF, 'Limits', [1 10], 'Value', 2);
+            obj.CutoffLabel = uilabel(gF, 'Text', AppConstants.Label_Cutoff); obj.CutoffSpinner = uispinner(gF, 'Limits', [0.1 500], 'Value', 10);
+            obj.FsLabel = uilabel(gF, 'Text', AppConstants.Label_FsAuto); obj.FsAutoCheckBox = uicheckbox(gF, 'Text', '', 'Value', true);
+            obj.FsValLabel = uilabel(gF, 'Text', AppConstants.Label_FsVal); obj.FsSpinner = uispinner(gF, 'Limits', [1 10000], 'Value', 1000, 'Enable', 'off');
 
-            pD = uipanel(obj.GridAnalyze, 'Title', Resources.Label_AnalysisParams); pD.Layout.Row = 2;
+            pD = uipanel(obj.GridAnalyze, 'Title', AppConstants.Label_AnalysisParams); pD.Layout.Row = 2;
             gD = uigridlayout(pD, 'ColumnWidth', {'1x', '1x'}, 'RowHeight', {'fit', 'fit'});
-            obj.VelThreshLabel = uilabel(gD, 'Text', Resources.Label_VelThresh); obj.VelThreshSpinner = uispinner(gD, 'Limits', [1 1000], 'Value', 10);
-            obj.DurLabel = uilabel(gD, 'Text', Resources.Label_MinDur); obj.DurSpinner = uispinner(gD, 'Limits', [1 1000], 'Value', 40);
+            obj.VelThreshLabel = uilabel(gD, 'Text', AppConstants.Label_VelThresh); obj.VelThreshSpinner = uispinner(gD, 'Limits', [1 1000], 'Value', 10);
+            obj.DurLabel = uilabel(gD, 'Text', AppConstants.Label_MinDur); obj.DurSpinner = uispinner(gD, 'Limits', [1 1000], 'Value', 40);
             
-            obj.AnalyzeButton = uibutton(obj.GridAnalyze, 'push', 'Text', Resources.Text_AnalyzeButton, 'FontWeight', 'bold'); obj.AnalyzeButton.Layout.Row = 3;
+            obj.AnalyzeButton = uibutton(obj.GridAnalyze, 'push', 'Text', AppConstants.Text_AnalyzeButton, 'FontWeight', 'bold'); obj.AnalyzeButton.Layout.Row = 3;
         end
         
         function buildVisTab(obj)
-            import MotionAnalysis.UI.Resources
+            import MotionAnalysis.View.AppConstants
             
             obj.GridVis = uigridlayout(obj.TabVis, 'ColumnWidth', {'1x'}, 'RowHeight', {'fit', 'fit', '1x'});
             obj.GridVis.Padding = [10 10 10 10]; obj.GridVis.RowSpacing = 10;
             
             % 1. Merged Settings Panel
-            obj.VisSettingsPanel = uipanel(obj.GridVis, 'Title', Resources.Label_VisSettings);
+            obj.VisSettingsPanel = uipanel(obj.GridVis, 'Title', AppConstants.Label_VisSettings);
             obj.VisSettingsPanel.Layout.Row = 1;
             
             % 2-Column Grid inside Panel
@@ -195,29 +196,29 @@ classdef MainView < handle
             obj.VisGrid.Padding = [5 5 5 5]; obj.VisGrid.ColumnSpacing = 10;
             
             % -- Left Column: Axis Mapping --
-            obj.AxisMapLabel = uilabel(obj.VisGrid, 'Text', Resources.Label_AxisMapping, 'FontWeight', 'bold');
+            obj.AxisMapLabel = uilabel(obj.VisGrid, 'Text', AppConstants.Label_AxisMapping, 'FontWeight', 'bold');
             obj.AxisMapLabel.Layout.Row = 1; obj.AxisMapLabel.Layout.Column = 1;
             
             gAxis = uigridlayout(obj.VisGrid, 'ColumnWidth', {'fit', '1x'}, 'RowHeight', {'fit', 'fit', 'fit'});
             gAxis.Layout.Row = [2 4]; gAxis.Layout.Column = 1; gAxis.Padding = [0 0 0 0];
             
-            obj.AxisXLabel = uilabel(gAxis, 'Text', Resources.Label_PlotX); obj.AxisXSpinner = uispinner(gAxis, 'Limits', [1 3], 'Value', 1);
-            obj.AxisYLabel = uilabel(gAxis, 'Text', Resources.Label_PlotY); obj.AxisYSpinner = uispinner(gAxis, 'Limits', [1 3], 'Value', 2);
-            obj.AxisZLabel = uilabel(gAxis, 'Text', Resources.Label_PlotZ); obj.AxisZSpinner = uispinner(gAxis, 'Limits', [1 3], 'Value', 3);
+            obj.AxisXLabel = uilabel(gAxis, 'Text', AppConstants.Label_PlotX); obj.AxisXSpinner = uispinner(gAxis, 'Limits', [1 3], 'Value', 1);
+            obj.AxisYLabel = uilabel(gAxis, 'Text', AppConstants.Label_PlotY); obj.AxisYSpinner = uispinner(gAxis, 'Limits', [1 3], 'Value', 2);
+            obj.AxisZLabel = uilabel(gAxis, 'Text', AppConstants.Label_PlotZ); obj.AxisZSpinner = uispinner(gAxis, 'Limits', [1 3], 'Value', 3);
 
             % -- Right Column: Display Options --
-            obj.VisOptLabel = uilabel(obj.VisGrid, 'Text', Resources.Label_VisOptions, 'FontWeight', 'bold');
+            obj.VisOptLabel = uilabel(obj.VisGrid, 'Text', AppConstants.Label_VisOptions, 'FontWeight', 'bold');
             obj.VisOptLabel.Layout.Row = 1; obj.VisOptLabel.Layout.Column = 2;
             
-            obj.CheckShowGrid = uicheckbox(obj.VisGrid, 'Text', Resources.Check_ShowGrid, 'Value', true);
+            obj.CheckShowGrid = uicheckbox(obj.VisGrid, 'Text', AppConstants.Check_ShowGrid, 'Value', true);
             obj.CheckShowGrid.Layout.Row = 2; obj.CheckShowGrid.Layout.Column = 2;
-            obj.CheckShowTraj = uicheckbox(obj.VisGrid, 'Text', Resources.Check_ShowTraj, 'Value', true);
+            obj.CheckShowTraj = uicheckbox(obj.VisGrid, 'Text', AppConstants.Check_ShowTraj, 'Value', true);
             obj.CheckShowTraj.Layout.Row = 3; obj.CheckShowTraj.Layout.Column = 2;
-            obj.CheckShowEvents = uicheckbox(obj.VisGrid, 'Text', Resources.Check_ShowEvents, 'Value', true);
+            obj.CheckShowEvents = uicheckbox(obj.VisGrid, 'Text', AppConstants.Check_ShowEvents, 'Value', true);
             obj.CheckShowEvents.Layout.Row = 4; obj.CheckShowEvents.Layout.Column = 2;
 
             % 2. Result Label
-            obj.ResultLabel = uilabel(obj.GridVis, 'Text', Resources.Label_ResultTable, 'FontWeight', 'bold');
+            obj.ResultLabel = uilabel(obj.GridVis, 'Text', AppConstants.Label_ResultTable, 'FontWeight', 'bold');
             obj.ResultLabel.Layout.Row = 2;
             
             % 3. Result Table
@@ -229,7 +230,7 @@ classdef MainView < handle
         end
         
         function buildExportTab(obj)
-            import MotionAnalysis.UI.Resources
+            import MotionAnalysis.View.AppConstants
             
             % --- MODIFIED ROW HEIGHT HERE ---
             % Changed from {'1x', 'fit'} (which made button giant '1x' relative to panel)
@@ -238,29 +239,29 @@ classdef MainView < handle
             obj.GridExport.Padding = [10 10 10 10]; obj.GridExport.RowSpacing = 10;
             
             % Options Panel
-            obj.ExportPanel = uipanel(obj.GridExport, 'Title', Resources.Label_ExportOpts); 
+            obj.ExportPanel = uipanel(obj.GridExport, 'Title', AppConstants.Label_ExportOpts); 
             obj.ExportPanel.Layout.Row = 1;
             
             gOpt = uigridlayout(obj.ExportPanel, 'ColumnWidth', {'1x', '1x'}, 'RowHeight', {'fit', 'fit', 'fit', 'fit', 'fit', 'fit', 'fit'});
             gOpt.Padding = [5 5 5 5]; gOpt.ColumnSpacing = 15;
             
-            obj.CatGeneral = uilabel(gOpt, 'Text', Resources.Label_CatGeneral, 'FontWeight', 'bold'); obj.CatGeneral.Layout.Row = 1; obj.CatGeneral.Layout.Column = 1;
-            obj.CheckType = uicheckbox(gOpt, 'Text', Resources.Check_Type, 'Value', true); obj.CheckType.Layout.Row = 2; obj.CheckType.Layout.Column = 1;
+            obj.CatGeneral = uilabel(gOpt, 'Text', AppConstants.Label_CatGeneral, 'FontWeight', 'bold'); obj.CatGeneral.Layout.Row = 1; obj.CatGeneral.Layout.Column = 1;
+            obj.CheckType = uicheckbox(gOpt, 'Text', AppConstants.Check_Type, 'Value', true); obj.CheckType.Layout.Row = 2; obj.CheckType.Layout.Column = 1;
             
-            obj.CatCoords = uilabel(gOpt, 'Text', Resources.Label_CatCoords, 'FontWeight', 'bold'); obj.CatCoords.Layout.Row = 3; obj.CatCoords.Layout.Column = 1;
-            obj.CheckOnsetPos = uicheckbox(gOpt, 'Text', Resources.Check_OnsetPos, 'Value', true); obj.CheckOnsetPos.Layout.Row = 4; obj.CheckOnsetPos.Layout.Column = 1;
-            obj.CheckOffsetPos = uicheckbox(gOpt, 'Text', Resources.Check_OffsetPos, 'Value', true); obj.CheckOffsetPos.Layout.Row = 5; obj.CheckOffsetPos.Layout.Column = 1;
-            obj.CheckSubPos = uicheckbox(gOpt, 'Text', Resources.Check_SubPos, 'Value', true); obj.CheckSubPos.Layout.Row = 6; obj.CheckSubPos.Layout.Column = 1;
+            obj.CatCoords = uilabel(gOpt, 'Text', AppConstants.Label_CatCoords, 'FontWeight', 'bold'); obj.CatCoords.Layout.Row = 3; obj.CatCoords.Layout.Column = 1;
+            obj.CheckOnsetPos = uicheckbox(gOpt, 'Text', AppConstants.Check_OnsetPos, 'Value', true); obj.CheckOnsetPos.Layout.Row = 4; obj.CheckOnsetPos.Layout.Column = 1;
+            obj.CheckOffsetPos = uicheckbox(gOpt, 'Text', AppConstants.Check_OffsetPos, 'Value', true); obj.CheckOffsetPos.Layout.Row = 5; obj.CheckOffsetPos.Layout.Column = 1;
+            obj.CheckSubPos = uicheckbox(gOpt, 'Text', AppConstants.Check_SubPos, 'Value', true); obj.CheckSubPos.Layout.Row = 6; obj.CheckSubPos.Layout.Column = 1;
             
-            obj.CatMetrics = uilabel(gOpt, 'Text', Resources.Label_CatMetrics, 'FontWeight', 'bold'); obj.CatMetrics.Layout.Row = 1; obj.CatMetrics.Layout.Column = 2;
-            obj.CheckTotalDur = uicheckbox(gOpt, 'Text', Resources.Check_TotalDur, 'Value', true); obj.CheckTotalDur.Layout.Row = 2; obj.CheckTotalDur.Layout.Column = 2;
-            obj.CheckTimeSub = uicheckbox(gOpt, 'Text', Resources.Check_TimeSub, 'Value', true); obj.CheckTimeSub.Layout.Row = 3; obj.CheckTimeSub.Layout.Column = 2;
-            obj.CheckSubDur = uicheckbox(gOpt, 'Text', Resources.Check_SubDur, 'Value', true); obj.CheckSubDur.Layout.Row = 4; obj.CheckSubDur.Layout.Column = 2;
-            obj.CheckMaxVel = uicheckbox(gOpt, 'Text', Resources.Check_MaxVel, 'Value', true); obj.CheckMaxVel.Layout.Row = 5; obj.CheckMaxVel.Layout.Column = 2;
-            obj.CheckSubMaxVel = uicheckbox(gOpt, 'Text', Resources.Check_SubMaxVel, 'Value', true); obj.CheckSubMaxVel.Layout.Row = 6; obj.CheckSubMaxVel.Layout.Column = 2;
+            obj.CatMetrics = uilabel(gOpt, 'Text', AppConstants.Label_CatMetrics, 'FontWeight', 'bold'); obj.CatMetrics.Layout.Row = 1; obj.CatMetrics.Layout.Column = 2;
+            obj.CheckTotalDur = uicheckbox(gOpt, 'Text', AppConstants.Check_TotalDur, 'Value', true); obj.CheckTotalDur.Layout.Row = 2; obj.CheckTotalDur.Layout.Column = 2;
+            obj.CheckTimeSub = uicheckbox(gOpt, 'Text', AppConstants.Check_TimeSub, 'Value', true); obj.CheckTimeSub.Layout.Row = 3; obj.CheckTimeSub.Layout.Column = 2;
+            obj.CheckSubDur = uicheckbox(gOpt, 'Text', AppConstants.Check_SubDur, 'Value', true); obj.CheckSubDur.Layout.Row = 4; obj.CheckSubDur.Layout.Column = 2;
+            obj.CheckMaxVel = uicheckbox(gOpt, 'Text', AppConstants.Check_MaxVel, 'Value', true); obj.CheckMaxVel.Layout.Row = 5; obj.CheckMaxVel.Layout.Column = 2;
+            obj.CheckSubMaxVel = uicheckbox(gOpt, 'Text', AppConstants.Check_SubMaxVel, 'Value', true); obj.CheckSubMaxVel.Layout.Row = 6; obj.CheckSubMaxVel.Layout.Column = 2;
             
             % Export Button (Directly below options)
-            obj.ExportButton = uibutton(obj.GridExport, 'push', 'Text', Resources.Text_ExportButton, 'FontWeight', 'bold'); 
+            obj.ExportButton = uibutton(obj.GridExport, 'push', 'Text', AppConstants.Text_ExportButton, 'FontWeight', 'bold'); 
             obj.ExportButton.Layout.Row = 2;
             
             % Spacer Row is 3 ('1x') automatically
