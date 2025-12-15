@@ -1,15 +1,12 @@
-function batchData = loadBatch(files, sourcePath, timeCol, posStartCol, hasHeader, opts)
-% LOADBATCH Reads multiple CSV files with flexible column mapping.
-% Normalizes Time column to start at 0.
+function batchData = loadBatch(files, sourcePath, timeCol, posStartCol, hasHeader, inputUnit)
+% LOADBATCH Reads multiple CSV files.
+% Converts position data to mm if inputUnit is 'cm' or 'm'.
 
-arguments 
-    files
-    sourcePath 
-    timeCol (1,1) double {mustBeInteger} = 1 
-    posStartCol (1,1) double {mustBeInteger} = 2 
-    hasHeader (1,1) logical = false 
-    opts.normalizeTime (1,1) logical = true 
-end 
+    if nargin < 3; timeCol = 1; end
+    if nargin < 4; posStartCol = 2; end
+    if nargin < 5; hasHeader = false; end
+    if nargin < 6; inputUnit = 'mm'; end % Default
+
     if ischar(files) || (isstring(files) && isscalar(files))
         files = {files};
     end
@@ -17,11 +14,23 @@ end
     batchData = struct('FileName', {}, 'RawData', {}, 'Fs', {}, 'Results', {});
     validCount = 0;
 
-    % Setup read options
     if hasHeader
         numHeaderLines = 1;
     else
         numHeaderLines = 0;
+    end
+    
+    % Determine scaling factor to convert to mm
+    scaleFactor = 1;
+    switch inputUnit
+        case 'cm'
+            scaleFactor = 10;
+        case 'm'
+            scaleFactor = 1000;
+        case 'mm'
+            scaleFactor = 1;
+        otherwise
+            warning('Unknown unit: %s. Assuming mm.', inputUnit);
     end
 
     for i = 1:length(files)
@@ -29,38 +38,35 @@ end
         fullPath = fullfile(sourcePath, currentFile);
         
         try
-            % Read raw matrix
             rawFull = readmatrix(fullPath, 'NumHeaderLines', numHeaderLines);
             
-            % Check dimensions
             maxColNeeded = max(timeCol, posStartCol + 2);
             if size(rawFull, 2) < maxColNeeded
                 warning('File %s skipped: Not enough columns.', currentFile);
                 continue;
             end
             
-            % Extract Data
             tVal = rawFull(:, timeCol);
             posVal = rawFull(:, posStartCol : posStartCol+2);
             
-            % Normalize Time to start at 0 
-            if ~isempty(tVal) && opts.normalizeTime
+            % Normalize Time
+            if ~isempty(tVal)
                 tVal = tVal - tVal(1);
             end
             
-            % Store standardized data
+            % Convert Units to mm
+            posVal = posVal * scaleFactor;
+            
             standardizedData = [tVal, posVal];
             
             validCount = validCount + 1;
             batchData(validCount).FileName = string(currentFile);
             batchData(validCount).RawData = standardizedData;
             
-            % Calculate Fs
-            % Handle cases where time might be constant or single point
             if length(tVal) > 1
                 dt = mean(diff(tVal));
                 if isnan(dt) || dt <= 0
-                    warning('File %s skipped: Invalid time vector (dt <= 0 or NaN).', currentFile);
+                    warning('File %s skipped: Invalid time vector.', currentFile);
                     validCount = validCount - 1; 
                     continue;
                 end

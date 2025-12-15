@@ -2,17 +2,34 @@
   "Import": {
     "TimeCol": 1,
     "PosCol": 5,
-    "HasHeader": true
+    "HasHeader": true,
+    "Unit": "mm"
   },
   "Analysis": {
-    "AxisMapX": 1,
-    "AxisMapY": 3,
-    "AxisMapZ": 2,
     "VelThresh": 10,
     "MinDuration": 40,
     "FilterOrder": 2,
     "CutoffFreq": 10,
     "FsAuto": false,
     "FsValue": 150
+  },
+  "Visualization": {
+    "AxisMapX": 1,
+    "AxisMapY": 3,
+    "AxisMapZ": 2,
+    "ShowGrid": true,
+    "ShowTraj": true,
+    "ShowEvents": true
+  },
+  "Export": {
+    "IncludeType": true,
+    "IncludeOnsetPos": true,
+    "IncludeOffsetPos": true,
+    "IncludeSubPos": true,
+    "IncludeTotalDur": true,
+    "IncludeTimeToSub": true,
+    "IncludeSubDur": true,
+    "IncludeMaxVel": true,
+    "IncludeSubMaxVel": false
   }
 }

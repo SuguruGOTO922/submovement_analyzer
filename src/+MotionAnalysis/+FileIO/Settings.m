@@ -1,61 +1,84 @@
 classdef Settings
     methods (Static)
         function defaults = getDefaults()
-            % GETDEFAULTS Returns the hardcoded default configuration
+            % GETDEFAULTS Returns the default configuration structure.
             
-            % --- Import Defaults ---
+            % --- 1. Import Settings ---
             defaults.Import.TimeCol = 1;
             defaults.Import.PosCol = 2;
             defaults.Import.HasHeader = false;
+            defaults.Import.Unit = 'mm'; % New
             
-            % --- Analysis Defaults ---
-            defaults.Analysis.AxisMapX = 1;
-            defaults.Analysis.AxisMapY = 2;
-            defaults.Analysis.AxisMapZ = 3;
-            
-            % Event Detection
-            defaults.Analysis.VelThresh = 10;
-            defaults.Analysis.MinDuration = 40; % ms
-            
-            % Filter Settings
-            defaults.Analysis.FilterOrder = 2;   % 2nd order
-            defaults.Analysis.CutoffFreq = 10;   % 10 Hz
-            
-            % Sampling Rate (0 or NaN means Auto)
+            % --- 2. Analysis Settings ---
+            defaults.Analysis.FilterOrder = 2;
+            defaults.Analysis.CutoffFreq = 10;
             defaults.Analysis.FsAuto = true;
-            defaults.Analysis.FsValue = 1000;    % Default fallback if manual
+            defaults.Analysis.FsValue = 1000;
+            defaults.Analysis.VelThresh = 10;
+            defaults.Analysis.MinDuration = 40; 
+            
+            % --- 3. Visualization Settings ---
+            defaults.Visualization.AxisMapX = 1;
+            defaults.Visualization.AxisMapY = 2;
+            defaults.Visualization.AxisMapZ = 3;
+            
+            % New: Display Options
+            defaults.Visualization.ShowGrid = true;
+            defaults.Visualization.ShowTraj = true;
+            defaults.Visualization.ShowEvents = true;
+            
+            % --- 4. Export Settings ---
+            defaults.Export.IncludeType    = true;
+            defaults.Export.IncludeOnsetPos  = true;
+            defaults.Export.IncludeOffsetPos = true;
+            defaults.Export.IncludeSubPos    = true;
+            defaults.Export.IncludeTotalDur  = true;
+            defaults.Export.IncludeTimeToSub = true;
+            defaults.Export.IncludeSubDur    = true;
+            defaults.Export.IncludeMaxVel    = true;
+            defaults.Export.IncludeSubMaxVel = true;
         end
 
         function settings = load()
-            % LOAD Reads settings.json or returns defaults if not found
             filePath = MotionAnalysis.FileIO.Settings.getFilePath();
             defaults = MotionAnalysis.FileIO.Settings.getDefaults();
+            settings = defaults; 
             
             if exist(filePath, 'file')
                 try
                     text = fileread(filePath);
                     loaded = jsondecode(text);
-                    settings = defaults;
                     
-                    if isfield(loaded, 'Import')
-                        f = fieldnames(loaded.Import);
-                        for i = 1:numel(f); settings.Import.(f{i}) = loaded.Import.(f{i}); end
+                    % Recursive merge
+                    sections = fieldnames(defaults);
+                    for i = 1:numel(sections)
+                        secName = sections{i};
+                        if isfield(loaded, secName)
+                            f = fieldnames(defaults.(secName));
+                            for k = 1:numel(f)
+                                fName = f{k};
+                                if isfield(loaded.(secName), fName)
+                                    settings.(secName).(fName) = loaded.(secName).(fName);
+                                end
+                            end
+                        end
                     end
+                    
+                    % Legacy migration (if needed)
                     if isfield(loaded, 'Analysis')
-                        f = fieldnames(loaded.Analysis);
-                        for i = 1:numel(f); settings.Analysis.(f{i}) = loaded.Analysis.(f{i}); end
+                        if isfield(loaded.Analysis, 'AxisMapX')
+                            settings.Visualization.AxisMapX = loaded.Analysis.AxisMapX;
+                            settings.Visualization.AxisMapY = loaded.Analysis.AxisMapY;
+                            settings.Visualization.AxisMapZ = loaded.Analysis.AxisMapZ;
+                        end
                     end
                 catch
                     warning('Failed to parse settings.json. Using defaults.');
-                    settings = defaults;
                 end
-            else
-                settings = defaults;
             end
         end
 
         function save(currentSettings)
-            % SAVE Writes the current settings structure to settings.json
             filePath = MotionAnalysis.FileIO.Settings.getFilePath();
             try
                 text = jsonencode(currentSettings, 'PrettyPrint', true);

@@ -18,15 +18,20 @@ classdef SubmovementAnalyzer < handle
         function app = launch()
             import MotionAnalysis.UI.Resources
             
+            % Check for existing instance
             existingFigs = findall(groot, 'Type', 'figure', 'Tag', Resources.AppTag);
+            
             if ~isempty(existingFigs)
-                figure(existingFigs(1));
-                if isprop(existingFigs(1), 'UserData') && ~isempty(existingFigs(1).UserData)
-                    app = existingFigs(1).UserData;
+                % Instance exists: Bring to front
+                fig = existingFigs(1);
+                figure(fig);
+                if isprop(fig, 'UserData') && ~isempty(fig.UserData)
+                    app = fig.UserData;
                 else
                     app = []; 
                 end
             else
+                % Create new instance
                 app = SubmovementAnalyzer();
             end
         end
@@ -37,6 +42,7 @@ classdef SubmovementAnalyzer < handle
     % ---------------------------------------------------------------------
     methods (Access = public)
         function delete(app)
+            % Clean up the View when Controller is deleted
             if ~isempty(app.View) && isvalid(app.View)
                 delete(app.View);
             end
@@ -50,6 +56,7 @@ classdef SubmovementAnalyzer < handle
         function app = SubmovementAnalyzer
             import MotionAnalysis.UI.Resources
             
+            % Singleton Check
             existingFigs = findall(groot, 'Type', 'figure', 'Tag', Resources.AppTag);
             if ~isempty(existingFigs)
                 figure(existingFigs(1));
@@ -60,14 +67,14 @@ classdef SubmovementAnalyzer < handle
             % 1. Instantiate View
             app.View = MotionAnalysis.UI.MainView();
             
-            % 2. Setup Tag
+            % 2. Setup Tag & Store App Reference
             app.View.UIFigure.Tag = Resources.AppTag;
             app.View.UIFigure.UserData = app;
             
             % 3. Bind Callbacks
             app.bindCallbacks();
 
-            % 4. Initialize Settings
+            % 4. Load Settings
             app.initialize();
             
             if nargout == 0; clear app; end
@@ -76,43 +83,72 @@ classdef SubmovementAnalyzer < handle
         function bindCallbacks(app)
             v = app.View;
             
+            % Window
             v.UIFigure.CloseRequestFcn        = @(src, event) app.onClose(src, event);
+            
+            % Actions
             v.LoadButton.ButtonPushedFcn      = @app.LoadButtonPushed;
             v.AnalyzeButton.ButtonPushedFcn   = @app.AnalyzeButtonPushed;
             v.ExportButton.ButtonPushedFcn    = @app.ExportButtonPushed;
+            
+            % Interactive UI
             v.FsAutoCheckBox.ValueChangedFcn  = @app.FsAutoChanged;
             v.ResultTable.SelectionChangedFcn = @app.ResultTableSelectionChanged;
             
+            % Visualization Triggers
             v.AxisXSpinner.ValueChangedFcn    = @app.AxisSpinnerChanged;
             v.AxisYSpinner.ValueChangedFcn    = @app.AxisSpinnerChanged;
             v.AxisZSpinner.ValueChangedFcn    = @app.AxisSpinnerChanged;
+            
+            v.CheckShowGrid.ValueChangedFcn   = @app.VisOptionChanged;
+            v.CheckShowTraj.ValueChangedFcn   = @app.VisOptionChanged;
+            v.CheckShowEvents.ValueChangedFcn = @app.VisOptionChanged;
         end
 
         function initialize(app)
+            % Load settings from JSON and populate the UI
             s = MotionAnalysis.FileIO.Settings.load();
             v = app.View;
             
+            % 1. Import Settings
             v.TimeColSpinner.Value = s.Import.TimeCol;
             v.PosColSpinner.Value = s.Import.PosCol;
             v.HeaderCheckBox.Value = s.Import.HasHeader;
+            v.UnitDropDown.Value = s.Import.Unit;
             
-            if isfield(s.Analysis, 'AxisMapX'); v.AxisXSpinner.Value = s.Analysis.AxisMapX; end
-            if isfield(s.Analysis, 'AxisMapY'); v.AxisYSpinner.Value = s.Analysis.AxisMapY; end
-            if isfield(s.Analysis, 'AxisMapZ'); v.AxisZSpinner.Value = s.Analysis.AxisMapZ; end
-            
+            % 2. Analysis Settings
             v.VelThreshSpinner.Value = s.Analysis.VelThresh;
             v.DurSpinner.Value = s.Analysis.MinDuration;
+            v.OrderSpinner.Value = s.Analysis.FilterOrder;
+            v.CutoffSpinner.Value = s.Analysis.CutoffFreq;
+            v.FsAutoCheckBox.Value = s.Analysis.FsAuto;
+            v.FsSpinner.Value = s.Analysis.FsValue;
             
-            if isfield(s.Analysis, 'FilterOrder'); v.OrderSpinner.Value = s.Analysis.FilterOrder; end
-            if isfield(s.Analysis, 'CutoffFreq'); v.CutoffSpinner.Value = s.Analysis.CutoffFreq; end
-            if isfield(s.Analysis, 'FsAuto'); v.FsAutoCheckBox.Value = s.Analysis.FsAuto; end
-            if isfield(s.Analysis, 'FsValue'); v.FsSpinner.Value = s.Analysis.FsValue; end
+            % 3. Visualization Settings
+            v.AxisXSpinner.Value = s.Visualization.AxisMapX;
+            v.AxisYSpinner.Value = s.Visualization.AxisMapY;
+            v.AxisZSpinner.Value = s.Visualization.AxisMapZ;
+            v.CheckShowGrid.Value = s.Visualization.ShowGrid;
+            v.CheckShowTraj.Value = s.Visualization.ShowTraj;
+            v.CheckShowEvents.Value = s.Visualization.ShowEvents;
             
+            % 4. Export Settings
+            v.CheckType.Value = s.Export.IncludeType;
+            v.CheckOnsetPos.Value = s.Export.IncludeOnsetPos;
+            v.CheckOffsetPos.Value = s.Export.IncludeOffsetPos;
+            v.CheckSubPos.Value = s.Export.IncludeSubPos;
+            v.CheckTotalDur.Value = s.Export.IncludeTotalDur;
+            v.CheckTimeSub.Value = s.Export.IncludeTimeToSub;
+            v.CheckSubDur.Value = s.Export.IncludeSubDur;
+            v.CheckMaxVel.Value = s.Export.IncludeMaxVel;
+            v.CheckSubMaxVel.Value = s.Export.IncludeSubMaxVel;
+            
+            % Update UI State
             v.FsSpinner.Enable = ~v.FsAutoCheckBox.Value;
         end
                 
         function onClose(app, ~, ~)
-            saveSettings(app);
+            app.saveSettings();
             app.View.UIFigure.CloseRequestFcn = '';
             delete(app);
         end
@@ -120,21 +156,39 @@ classdef SubmovementAnalyzer < handle
         function saveSettings(app)
             try
                 v = app.View;
+                
+                % Import
                 s.Import.TimeCol = v.TimeColSpinner.Value;
                 s.Import.PosCol = v.PosColSpinner.Value;
                 s.Import.HasHeader = v.HeaderCheckBox.Value;
+                s.Import.Unit = v.UnitDropDown.Value;
                 
-                s.Analysis.AxisMapX = v.AxisXSpinner.Value;
-                s.Analysis.AxisMapY = v.AxisYSpinner.Value;
-                s.Analysis.AxisMapZ = v.AxisZSpinner.Value;
-                
+                % Analysis
                 s.Analysis.VelThresh = v.VelThreshSpinner.Value;
                 s.Analysis.MinDuration = v.DurSpinner.Value;
-                
                 s.Analysis.FilterOrder = v.OrderSpinner.Value;
                 s.Analysis.CutoffFreq = v.CutoffSpinner.Value;
                 s.Analysis.FsAuto = v.FsAutoCheckBox.Value;
                 s.Analysis.FsValue = v.FsSpinner.Value;
+                
+                % Visualization
+                s.Visualization.AxisMapX = v.AxisXSpinner.Value;
+                s.Visualization.AxisMapY = v.AxisYSpinner.Value;
+                s.Visualization.AxisMapZ = v.AxisZSpinner.Value;
+                s.Visualization.ShowGrid = v.CheckShowGrid.Value;
+                s.Visualization.ShowTraj = v.CheckShowTraj.Value;
+                s.Visualization.ShowEvents = v.CheckShowEvents.Value;
+                
+                % Export
+                s.Export.IncludeType = v.CheckType.Value;
+                s.Export.IncludeOnsetPos = v.CheckOnsetPos.Value;
+                s.Export.IncludeOffsetPos = v.CheckOffsetPos.Value;
+                s.Export.IncludeSubPos = v.CheckSubPos.Value;
+                s.Export.IncludeTotalDur = v.CheckTotalDur.Value;
+                s.Export.IncludeTimeToSub = v.CheckTimeSub.Value;
+                s.Export.IncludeSubDur = v.CheckSubDur.Value;
+                s.Export.IncludeMaxVel = v.CheckMaxVel.Value;
+                s.Export.IncludeSubMaxVel = v.CheckSubMaxVel.Value;
                 
                 MotionAnalysis.FileIO.Settings.save(s);
             catch ME
@@ -155,7 +209,12 @@ classdef SubmovementAnalyzer < handle
             if isequal(files, 0); return; end
             
             try
-                app.BatchData = MotionAnalysis.FileIO.loadBatch(files, path, v.TimeColSpinner.Value, v.PosColSpinner.Value, v.HeaderCheckBox.Value);
+                % Pass Unit Selection to Loader
+                app.BatchData = MotionAnalysis.FileIO.loadBatch(files, path, ...
+                    v.TimeColSpinner.Value, ...
+                    v.PosColSpinner.Value, ...
+                    v.HeaderCheckBox.Value, ...
+                    v.UnitDropDown.Value);
                 
                 count = length(app.BatchData);
                 v.StatusLabel.Text = sprintf(Resources.Msg_LoadedCount, count);
@@ -167,7 +226,7 @@ classdef SubmovementAnalyzer < handle
                 app.IsAnalyzed = false;
                 v.LeftTabGroup.SelectedTab = v.TabAnalyze;
                 
-                saveSettings(app);
+                app.saveSettings();
                 
             catch ME
                 uialert(v.UIFigure, ME.message, Resources.Msg_LoadErrorTitle);
@@ -181,7 +240,7 @@ classdef SubmovementAnalyzer < handle
             
             try
                 params.VelThresh = v.VelThreshSpinner.Value;
-                params.MinDuration = v.DurSpinner.Value / 1000; 
+                params.MinDuration = v.DurSpinner.Value / 1000; % ms to s
                 params.FilterOrder = v.OrderSpinner.Value;
                 params.CutoffFreq = v.CutoffSpinner.Value;
                 params.FsAuto = v.FsAutoCheckBox.Value;
@@ -199,11 +258,10 @@ classdef SubmovementAnalyzer < handle
                 v.StatusLabel.Text = Resources.Msg_AnalyzeComplete;
                 v.ExportButton.Enable = 'on';
                 
-                populateResultTable(app);
+                app.populateResultTable();
+                v.LeftTabGroup.SelectedTab = v.TabVis;
                 
-                v.LeftTabGroup.SelectedTab = v.TabResult;
-                
-                saveSettings(app);
+                app.saveSettings();
                                 
             catch ME
                 uialert(v.UIFigure, [Resources.Msg_AnalyzeErrorTitle ': ' ME.message], 'Error');
@@ -216,33 +274,36 @@ classdef SubmovementAnalyzer < handle
         
         function ResultTableSelectionChanged(app, ~, event)
             if ~app.IsAnalyzed; return; end
-            indices = event.Selection;
-            if ~isempty(indices)
-                idx = indices(1);
-                updateView(app, idx);
+            if ~isempty(event.Selection)
+                idx = event.Selection(1);
+                app.updateView(idx);
             end
         end
         
         function AxisSpinnerChanged(app, ~, ~)
             if app.IsAnalyzed && ~isempty(app.View.ResultTable.Selection)
                  idx = app.View.ResultTable.Selection(1);
-                 updateView(app, idx);
+                 app.updateView(idx);
+            end
+        end
+        
+        function VisOptionChanged(app, ~, ~)
+            if app.IsAnalyzed && ~isempty(app.View.ResultTable.Selection)
+                 idx = app.View.ResultTable.Selection(1);
+                 app.updateView(idx);
             end
         end
 
         function ExportButtonPushed(app, ~, ~)
             import MotionAnalysis.UI.Resources
             if ~app.IsAnalyzed; return; end
-            
             v = app.View;
             
-            % Read options
+            % Read Export Options
             options.IncType      = v.CheckType.Value;
-            
             options.IncOnsetPos  = v.CheckOnsetPos.Value;
             options.IncOffsetPos = v.CheckOffsetPos.Value;
             options.IncSubPos    = v.CheckSubPos.Value;
-            
             options.IncTotalDur  = v.CheckTotalDur.Value;
             options.IncTimeToSub = v.CheckTimeSub.Value;
             options.IncSubDur    = v.CheckSubDur.Value;
@@ -252,8 +313,10 @@ classdef SubmovementAnalyzer < handle
             [file, path] = uiputfile('*.csv', Resources.Msg_SaveBatchTitle);
             figure(v.UIFigure);
             if isequal(file, 0); return; end
+            
             try
                 MotionAnalysis.FileIO.exportSummary(app.BatchData, fullfile(path, file), options);
+                app.saveSettings();
                 uialert(v.UIFigure, Resources.Msg_ExportSuccess, Resources.Msg_ExportSuccessTitle);
             catch ME
                 uialert(v.UIFigure, [Resources.Msg_ExportErrorTitle ': ' ME.message], 'Error');
@@ -270,9 +333,10 @@ classdef SubmovementAnalyzer < handle
                 tData{i, 2} = char(app.BatchData(i).Results.SubType);
             end
             app.View.ResultTable.Data = tData;
+            
             if nFiles > 0
                 app.View.ResultTable.Selection = 1;
-                updateView(app, 1);
+                app.updateView(1);
             end
         end
 
@@ -283,7 +347,6 @@ classdef SubmovementAnalyzer < handle
             
             v = app.View;
             
-            % Pack axes
             axesHandles.Ax3D = v.Ax3D;
             axesHandles.AxVel = v.AxVel;
             axesHandles.AxAcc = v.AxAcc;
@@ -294,8 +357,11 @@ classdef SubmovementAnalyzer < handle
             mapZ = v.AxisZSpinner.Value;
             axisMap = [mapX, mapY, mapZ];
             
-            % Call UI Plotter
-            MotionAnalysis.UI.Plotter.update(axesHandles, app.BatchData, highlightIdx, axisMap);
+            visOpts.ShowGrid   = v.CheckShowGrid.Value;
+            visOpts.ShowTraj   = v.CheckShowTraj.Value;
+            visOpts.ShowEvents = v.CheckShowEvents.Value;
+            
+            MotionAnalysis.UI.Plotter.update(axesHandles, app.BatchData, highlightIdx, axisMap, visOpts);
             
             res = app.BatchData(highlightIdx).Results;
             v.StatusLabel.Text = sprintf('File: %s | Type: %s | Fs: %d Hz', ...
