@@ -78,7 +78,7 @@ classdef AnalysisEngine
             % Pack Results
             res.Time        = timeVec;
             res.Fs          = fs;
-            res.PosSmooth   = posSmooth;
+            res.PosSmooth   = posSmooth - posSmooth(onset, :);
             res.TanVel      = tanVel;
             res.ProjVel     = projVel;
             res.ProjAcc     = projAcc;

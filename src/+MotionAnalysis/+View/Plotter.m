@@ -44,7 +44,7 @@ classdef Plotter < handle
             
             % Helper to map position
             function pMapped = mapPos(pRaw)
-                pMapped = pRaw(:, axisMap);
+                pMapped = pRaw(:, axisMap); 
             end
             
             % 1. Draw Ghost Traces (Background)
