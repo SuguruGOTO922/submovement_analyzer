@@ -12,7 +12,7 @@ function exportSummary(batchData, fullPath, options)
 %   .IncMaxVel      (bool)
 %   .IncSubMaxVel   (bool)
 
-    import MotionAnalysis.Algorithms.calculateMetrics
+    import MotionAnalysis.Model.Algorithms.calculateMetrics
 
     nFiles = length(batchData);
     
